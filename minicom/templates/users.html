@@ -1,0 +1,120 @@
+{% extends 'base.html' %} {% block title %} All users {% endblock %} {% block style %}
+<style>
+  .user-entry:hover {
+    background-color: #E0F0FF;
+  }
+
+  .conversation {
+    height: 200px;
+    line-height: 1em;
+    overflow: scroll;
+    border: 1px solid #101010
+  }
+</style>
+{% endblock %} {% block script %}
+<script>
+  function sendMessage(e) {
+    event.preventDefault();
+
+    $.post('/api/send', {
+        'to_user': $('#to-user').val(),
+        'message': $('#message').val(),
+        'direction': 'TO_USER',
+      })
+      .done(function (result) {
+        alert(result['success']);
+        window.location = window.location; // Refresh to update message counts.
+      })
+      .fail(function (result) {
+        alert(result.responseJSON['error']);
+      });
+    return false;
+  }
+
+  $(function () {
+    $('#message').keypress(function (e) {
+      if (e.which == 13) {
+        sendMessage(e);
+      }
+    });
+
+    // Send message to API from message composer.
+    $('#send-message').click(sendMessage);
+
+    $('.user-entry').click(function (event) {
+      var userId = $(event.target).data('userid');
+      $('#to-user').val(userId);
+
+      $.post('/api/conversation', {
+        email: $('#to-user').val()
+      }).done(
+        function (response) {
+          const {
+            messages
+          } = response;
+
+          let sender = '<strong>Admin</strong>';
+
+          $('#conversation').html(
+            messages.reverse().reduce((acc, curr) => {
+              if (curr.direction != 'TO_USER') {
+                sender = 'User';
+              }
+              return acc + `${sender}: ${curr.message}<br>`
+
+            }, '')
+          )
+        }
+      )
+    });
+  });
+</script> {% endblock %} {% block content %}
+<div class="page-header">
+  <h1>All Users
+    <small>{{ admin }}</small>
+  </h1>
+</div>
+
+<div class="row">
+
+  <!-- User list -->
+  <div class="col-md-8">
+    <ul class="list-group">
+      {% for user in users %}
+      <li class="user-entry list-group-item" data-userid="{{ user.email }}">
+        <span class="badge">{{ user.unread_count }}</span>
+        {{ user.email }}
+      </li>
+      {% endfor %}
+    </ul>
+
+  </div>
+
+  <!-- Message composer -->
+  <div class="col-md-4">
+    <form method="post" role="form">
+      <div class="form-group">
+        <label for="to-user">To</label>
+        <input type="text" class="form-control" id="to-user" placeholder="Select a user from your user list." readonly>
+      </div>
+
+      <div class="form-group">
+        <label for="message">Message</label>
+        <textarea class="form-control" id="message" rows="1"></textarea>
+      </div>
+      <div class="form-group">
+        <button type="submit" id="send-message" class="btn btn-default">Send</button>
+      </div>
+    </form>
+
+
+    <!-- TODO: actually fill this with something -->
+    <!-- Conversation -->
+    <div class="form-group">
+      <label for="comment">Conversation</label>
+      <div class="conversation" id="conversation"></div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

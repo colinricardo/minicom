@@ -1,0 +1,11 @@
+*.log
+*.pot
+*.pyc
+/db.sqlite3
+/local_settings.py
+/env
+.Python
+/bin
+/lib
+/include
+pip-selfchecj.json

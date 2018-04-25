@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>SuperAwesome 1.0</title>
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+
+  <style>
+    .conversation {
+      height: 200px;
+      line-height: 1em;
+      overflow: scroll;
+      border: 1px solid #101010
+    }
+  </style>
+</head>
+
+<body>
+  <div class="navbar navbar-inverse navbar-top" role="navigation">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">SuperAwesome 1.0</a>
+      </div>
+    </div>
+    <div class="navbar-collapse collapse">
+      <form class="navbar-form navbar-right" role="form">
+        <div class="form-group">
+          <input id="user-email" type="text" placeholder="Email" class="form-control">
+        </div>
+        <button id="sign-in" type="submit" class="btn btn-success">Sign in</button>
+      </form>
+    </div>
+    <!--/.navbar-collapse -->
+  </div>
+
+  <!-- Container -->
+  <div class="col-md-4">
+    <!-- Message composer -->
+    <form role="form">
+      <div class="form-group">
+        <label for="message">Message</label>
+        <textarea class="form-control" id="message" rows="1"></textarea>
+      </div>
+      <div class="form-group">
+        <button type="submit" id="send-message" class="btn btn-default">Send</button>
+      </div>
+    </form>
+
+    <!-- Conversation -->
+    <div class="form-group">
+      <label for="comment">Conversation</label>
+      <div class="conversation" id="conversation"></div>
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.0/jquery.cookie.js"></script>
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+  <script src="http://localhost:8000/static/minicom.js"></script>
+
+  <script language="javascript">
+    // Set logged-in user email.
+    $(function () {
+      var currentUser = $.cookie('user');
+      if (currentUser) {
+        $('#user-email').val(currentUser);
+      }
+    });
+
+    // Sign-in.
+    $(function () {
+      $('#sign-in').click(function (event) {
+        event.preventDefault();
+        $.cookie('user', $('#user-email').val())
+        Minicom.register($.cookie('user'));
+      });
+    });
+
+    // Register with Minicom.
+    $(function () {
+      if ($.cookie('user')) {
+        Minicom.register($.cookie('user'));
+      }
+    });
+
+    function sendMessage(e) {
+      e.preventDefault();
+
+      if ($('#message').val()) {
+        Minicom.sendMessage($.cookie('user'), $('#message').val());
+        $('#message').val('') // reset form
+      } else {
+        alert('You can\'t send an empty message!')
+      }
+
+    }
+
+    $(function () {
+      $('#message').keypress(function (e) {
+        if (e.which == 13) {
+          sendMessage(e);
+        }
+      });
+    });
+
+    $(function () {
+      $('#send-message').click(sendMessage);
+    });
+
+    $(function () {
+      if ($.cookie('user')) {
+        Minicom.getConversation($('#user-email').val())
+          .done((results) => {
+            const {
+              messages
+            } = results;
+
+            let sender = '<strong>Me</strong>';
+
+            $('#conversation').html(
+              messages.reverse().reduce((acc, curr) => {
+                if (curr.direction != 'FROM_USER') {
+                  sender = 'Admin';
+                }
+                return acc + `${sender}: ${curr.message}<br>`
+              }, '')
+            )
+          });
+      }
+    })
+  </script>
+</body>
+
+</html>

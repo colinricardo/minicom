@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+
+import os
+from BaseHTTPServer import HTTPServer
+from SimpleHTTPServer import SimpleHTTPRequestHandler
+
+
+LISTEN_HOST = '127.0.0.1'
+LISTEN_PORT = 8008
+WWW_ROOT = 'testapp-www'
+
+
+os.chdir(WWW_ROOT)
+httpd = HTTPServer((LISTEN_HOST, LISTEN_PORT), SimpleHTTPRequestHandler)
+print "Serving {} on http://{}:{} (^C to stop).".format(os.getcwd(), LISTEN_HOST, LISTEN_PORT)
+
+httpd.serve_forever()
